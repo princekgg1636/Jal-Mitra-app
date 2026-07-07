@@ -1,22 +1,33 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Jal Seva - Water Jar Delivery Management API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: customers
+    description: Customer management
+  - name: deliveries
+    description: Delivery entries
+  - name: payments
+    description: Payment entries
+  - name: dashboard
+    description: Dashboard statistics
+  - name: reports
+    description: Reports
+  - name: settings
+    description: App settings
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +35,452 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # CUSTOMERS
+  /customers:
+    get:
+      operationId: listCustomers
+      tags: [customers]
+      summary: List all customers
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [people, shop]
+        - name: active
+          in: query
+          schema:
+            type: boolean
+        - name: hasBalance
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of customers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Customer"
+    post:
+      operationId: createCustomer
+      tags: [customers]
+      summary: Create a new customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomerInput"
+      responses:
+        "201":
+          description: Created customer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+
+  /customers/{id}:
+    get:
+      operationId: getCustomer
+      tags: [customers]
+      summary: Get a customer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Customer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateCustomer
+      tags: [customers]
+      summary: Update a customer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomerUpdate"
+      responses:
+        "200":
+          description: Updated customer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+    delete:
+      operationId: deleteCustomer
+      tags: [customers]
+      summary: Delete a customer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /customers/{id}/summary/{year}/{month}:
+    get:
+      operationId: getCustomerSummary
+      tags: [customers]
+      summary: Get customer monthly summary
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: month
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Customer monthly summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerMonthlySummary"
+
+  # DELIVERIES
+  /deliveries:
+    get:
+      operationId: listDeliveries
+      tags: [deliveries]
+      summary: List deliveries
+      parameters:
+        - name: customerId
+          in: query
+          schema:
+            type: integer
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: List of deliveries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Delivery"
+    post:
+      operationId: createDelivery
+      tags: [deliveries]
+      summary: Record a delivery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeliveryInput"
+      responses:
+        "201":
+          description: Created delivery
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Delivery"
+
+  /deliveries/{id}:
+    get:
+      operationId: getDelivery
+      tags: [deliveries]
+      summary: Get a delivery
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Delivery
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Delivery"
+    patch:
+      operationId: updateDelivery
+      tags: [deliveries]
+      summary: Update a delivery
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeliveryUpdate"
+      responses:
+        "200":
+          description: Updated delivery
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Delivery"
+    delete:
+      operationId: deleteDelivery
+      tags: [deliveries]
+      summary: Delete a delivery
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # PAYMENTS
+  /payments:
+    get:
+      operationId: listPayments
+      tags: [payments]
+      summary: List payments
+      parameters:
+        - name: customerId
+          in: query
+          schema:
+            type: integer
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: List of payments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Payment"
+    post:
+      operationId: createPayment
+      tags: [payments]
+      summary: Record a payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentInput"
+      responses:
+        "201":
+          description: Created payment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+
+  /payments/{id}:
+    delete:
+      operationId: deletePayment
+      tags: [payments]
+      summary: Delete a payment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # DASHBOARD
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [dashboard]
+      summary: Get dashboard statistics
+      responses:
+        "200":
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /dashboard/top-outstanding:
+    get:
+      operationId: getTopOutstanding
+      tags: [dashboard]
+      summary: Get top 10 customers by outstanding balance
+      responses:
+        "200":
+          description: Top outstanding customers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OutstandingCustomer"
+
+  /dashboard/today-deliveries:
+    get:
+      operationId: getTodayDeliveries
+      tags: [dashboard]
+      summary: Get today's deliveries
+      responses:
+        "200":
+          description: Today's deliveries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Delivery"
+
+  # REPORTS
+  /reports/daily:
+    get:
+      operationId: getDailyReport
+      tags: [reports]
+      summary: Get daily report
+      parameters:
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Daily report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyReport"
+
+  /reports/monthly:
+    get:
+      operationId: getMonthlyReport
+      tags: [reports]
+      summary: Get monthly report
+      parameters:
+        - name: month
+          in: query
+          schema:
+            type: integer
+        - name: year
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Monthly report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MonthlyReport"
+
+  /reports/outstanding:
+    get:
+      operationId: getOutstandingReport
+      tags: [reports]
+      summary: Get outstanding balance report
+      responses:
+        "200":
+          description: Outstanding report
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OutstandingCustomer"
+
+  # SETTINGS
+  /settings:
+    get:
+      operationId: getSettings
+      tags: [settings]
+      summary: Get app settings
+      responses:
+        "200":
+          description: Settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+    patch:
+      operationId: updateSettings
+      tags: [settings]
+      summary: Update app settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettingsUpdate"
+      responses:
+        "200":
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +491,338 @@ components:
       required:
         - status
 
+    Customer:
+      type: object
+      required: [id, name, type, jarRate, balance, emptyJarBalance, active, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+          enum: [people, shop]
+        address:
+          type: ["string", "null"]
+        mobile:
+          type: ["string", "null"]
+        whatsapp:
+          type: ["string", "null"]
+        jarRate:
+          type: number
+        securityDeposit:
+          type: ["number", "null"]
+        balance:
+          type: number
+        emptyJarBalance:
+          type: integer
+        active:
+          type: boolean
+        notes:
+          type: ["string", "null"]
+        lastDeliveryDate:
+          type: ["string", "null"]
+        lastPaymentDate:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    CustomerInput:
+      type: object
+      required: [name, type, jarRate]
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: [people, shop]
+        address:
+          type: string
+        mobile:
+          type: string
+        whatsapp:
+          type: string
+        jarRate:
+          type: number
+        securityDeposit:
+          type: number
+        notes:
+          type: string
+
+    CustomerUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: [people, shop]
+        address:
+          type: string
+        mobile:
+          type: string
+        whatsapp:
+          type: string
+        jarRate:
+          type: number
+        securityDeposit:
+          type: ["number", "null"]
+        active:
+          type: boolean
+        notes:
+          type: ["string", "null"]
+
+    CustomerMonthlySummary:
+      type: object
+      required: [customerId, customerName, month, year, totalJars, totalAmount, totalPaid, balance, deliveries, payments]
+      properties:
+        customerId:
+          type: integer
+        customerName:
+          type: string
+        month:
+          type: integer
+        year:
+          type: integer
+        totalJars:
+          type: integer
+        totalAmount:
+          type: number
+        totalPaid:
+          type: number
+        balance:
+          type: number
+        deliveries:
+          type: array
+          items:
+            $ref: "#/components/schemas/Delivery"
+        payments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Payment"
+
+    Delivery:
+      type: object
+      required: [id, customerId, customerName, customerType, jarCount, amount, isPaid, deliveryDate, createdAt]
+      properties:
+        id:
+          type: integer
+        customerId:
+          type: integer
+        customerName:
+          type: string
+        customerType:
+          type: string
+          enum: [people, shop]
+        jarCount:
+          type: integer
+        amount:
+          type: number
+        isPaid:
+          type: boolean
+        deliveryDate:
+          type: string
+          format: date
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    DeliveryInput:
+      type: object
+      required: [customerId, jarCount, isPaid]
+      properties:
+        customerId:
+          type: integer
+        jarCount:
+          type: integer
+        isPaid:
+          type: boolean
+        deliveryDate:
+          type: string
+          format: date
+        notes:
+          type: string
+
+    DeliveryUpdate:
+      type: object
+      properties:
+        jarCount:
+          type: integer
+        isPaid:
+          type: boolean
+        deliveryDate:
+          type: string
+          format: date
+        notes:
+          type: ["string", "null"]
+
+    Payment:
+      type: object
+      required: [id, customerId, customerName, amount, mode, paymentDate, createdAt]
+      properties:
+        id:
+          type: integer
+        customerId:
+          type: integer
+        customerName:
+          type: string
+        amount:
+          type: number
+        mode:
+          type: string
+          enum: [cash, upi, bank, other]
+        paymentDate:
+          type: string
+          format: date
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    PaymentInput:
+      type: object
+      required: [customerId, amount, mode]
+      properties:
+        customerId:
+          type: integer
+        amount:
+          type: number
+        mode:
+          type: string
+          enum: [cash, upi, bank, other]
+        paymentDate:
+          type: string
+          format: date
+        notes:
+          type: string
+
+    DashboardStats:
+      type: object
+      required: [todayDeliveries, todayJars, todayCash, todayUdhar, monthlyIncome, monthlyUdhar, activeCustomers, pendingPaymentsCount]
+      properties:
+        todayDeliveries:
+          type: integer
+        todayJars:
+          type: integer
+        todayCash:
+          type: number
+        todayUdhar:
+          type: number
+        monthlyIncome:
+          type: number
+        monthlyUdhar:
+          type: number
+        activeCustomers:
+          type: integer
+        pendingPaymentsCount:
+          type: integer
+
+    OutstandingCustomer:
+      type: object
+      required: [id, name, type, balance, mobile, lastDeliveryDate]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+          enum: [people, shop]
+        balance:
+          type: number
+        mobile:
+          type: ["string", "null"]
+        whatsapp:
+          type: ["string", "null"]
+        lastDeliveryDate:
+          type: ["string", "null"]
+
+    DailyReport:
+      type: object
+      required: [date, totalDeliveries, totalJars, totalCash, totalUdhar, deliveries, payments]
+      properties:
+        date:
+          type: string
+        totalDeliveries:
+          type: integer
+        totalJars:
+          type: integer
+        totalCash:
+          type: number
+        totalUdhar:
+          type: number
+        deliveries:
+          type: array
+          items:
+            $ref: "#/components/schemas/Delivery"
+        payments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Payment"
+
+    MonthlyReport:
+      type: object
+      required: [month, year, totalJars, totalAmount, totalCollected, totalOutstanding, totalCustomers, customerSummaries]
+      properties:
+        month:
+          type: integer
+        year:
+          type: integer
+        totalJars:
+          type: integer
+        totalAmount:
+          type: number
+        totalCollected:
+          type: number
+        totalOutstanding:
+          type: number
+        totalCustomers:
+          type: integer
+        customerSummaries:
+          type: array
+          items:
+            $ref: "#/components/schemas/CustomerMonthlySummary"
+
+    Settings:
+      type: object
+      required: [id, businessName, defaultJarRate]
+      properties:
+        id:
+          type: integer
+        businessName:
+          type: string
+        businessAddress:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        upiId:
+          type: ["string", "null"]
+        defaultJarRate:
+          type: number
+        whatsappTemplateDeliveryPeople:
+          type: ["string", "null"]
+        whatsappTemplateDeliveryShop:
+          type: ["string", "null"]
+        whatsappTemplatePayment:
+          type: ["string", "null"]
+
+    SettingsUpdate:
+      type: object
+      properties:
+        businessName:
+          type: string
+        businessAddress:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        upiId:
+          type: ["string", "null"]
+        defaultJarRate:
+          type: number
+        whatsappTemplateDeliveryPeople:
+          type: ["string", "null"]
+        whatsappTemplateDeliveryShop:
+          type: ["string", "null"]
+        whatsappTemplatePayment:
+          type: ["string", "null"]

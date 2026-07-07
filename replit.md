@@ -1,10 +1,11 @@
-# [Project name]
+# Jal Seva (जल सेवा) — Water Jar Delivery Management
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A mobile-first React PWA for small Indian water jar delivery businesses. Manage customers, record daily jar deliveries, track payments, auto-calculate udhar (balance), send WhatsApp messages, and view monthly reports — all in a Hindi/Hinglish UI.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/api-server run dev` — run the API server (port 8080)
+- `pnpm --filter @workspace/jal-seva run dev` — run the frontend (port 19059)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
@@ -14,7 +15,8 @@ _Replace the heading above with the project's name, and this line with one sente
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
+- Frontend: React 19 + Vite, TanStack Query, React Router
+- API: Express 5, pino logging
 - DB: PostgreSQL + Drizzle ORM
 - Validation: Zod (`zod/v4`), `drizzle-zod`
 - API codegen: Orval (from OpenAPI spec)
@@ -22,15 +24,30 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `lib/db/src/schema/index.ts` — DB schema (customers, deliveries, payments, settings tables)
+- `lib/api-spec/openapi.yaml` — OpenAPI spec (source of truth for API contract)
+- `artifacts/api-server/src/routes/` — Express route handlers
+- `artifacts/jal-seva/src/` — React frontend (pages + components)
+- `artifacts/jal-seva/src/App.tsx` — client-side routing
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Contract-first API: OpenAPI spec → Orval codegen generates React Query hooks and Zod schemas
+- Balance is stored as NUMERIC in DB and updated on every delivery/payment mutation
+- Customer summary endpoint uses path params (`/customers/:id/summary/:year/:month`) to avoid Orval codegen naming collisions
+- Route handlers use `res.json(); return;` (two statements) instead of `return res.json()` to satisfy `Promise<void>` typing in Express 5
+- All backend logging uses `req.log` (pino) — never `console.log`
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Dashboard — आज की डिलीवरी stats, इस महीने कमाई, top outstanding balances
+- Customer management — add/edit/deactivate customers (घर / दुकान types), search/filter
+- Daily delivery entry — record jar deliveries, auto-calculate amount from rate
+- Payment collection — record cash/UPI/other payments, auto-reduce udhar
+- Customer detail — full delivery + payment history, monthly summary
+- Reports — monthly income, outstanding balances
+- Settings — business name, default jar rate, WhatsApp message templates
+- WhatsApp integration — pre-filled wa.me links for sending payment reminders
 
 ## User preferences
 
@@ -38,7 +55,9 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Always run `pnpm --filter @workspace/api-spec run codegen` after changing `openapi.yaml`
+- Always run `pnpm --filter @workspace/db run push` after changing `lib/db/src/schema/index.ts`
+- Do not use `pnpm run dev` at workspace root — run individual artifact workflows instead
 
 ## Pointers
 
