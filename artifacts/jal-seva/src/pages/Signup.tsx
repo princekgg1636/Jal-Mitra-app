@@ -4,30 +4,13 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, Phone, Lock, User, Home, Bike, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, Phone, Lock, User, Home, Bike, ShieldCheck, Store } from "lucide-react";
 
 const roles: { value: Role; label: string; sublabel: string; icon: React.ReactNode; color: string }[] = [
-  {
-    value: "grahak",
-    label: "ग्राहक",
-    sublabel: "Customer",
-    icon: <Home className="w-6 h-6" />,
-    color: "border-blue-400 bg-blue-50 text-blue-700",
-  },
-  {
-    value: "delivery_boy",
-    label: "डिलीवरी बॉय",
-    sublabel: "Delivery Boy",
-    icon: <Bike className="w-6 h-6" />,
-    color: "border-green-400 bg-green-50 text-green-700",
-  },
-  {
-    value: "admin",
-    label: "एडमिन",
-    sublabel: "Admin",
-    icon: <ShieldCheck className="w-6 h-6" />,
-    color: "border-purple-400 bg-purple-50 text-purple-700",
-  },
+  { value: "grahak",      label: "ग्राहक",       sublabel: "Customer",     icon: <Home className="w-6 h-6" />,        color: "border-blue-400 bg-blue-50 text-blue-700" },
+  { value: "delivery_boy",label: "डिलीवरी बॉय", sublabel: "Delivery Boy", icon: <Bike className="w-6 h-6" />,        color: "border-green-400 bg-green-50 text-green-700" },
+  { value: "shop",        label: "दुकान",         sublabel: "Shop",         icon: <Store className="w-6 h-6" />,       color: "border-orange-400 bg-orange-50 text-orange-700" },
+  { value: "admin",       label: "एडमिन",         sublabel: "Admin",        icon: <ShieldCheck className="w-6 h-6" />, color: "border-purple-400 bg-purple-50 text-purple-700" },
 ];
 
 export default function Signup() {
@@ -44,14 +27,8 @@ export default function Signup() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (mobile.length !== 10) {
-      setError("10 अंकों का मोबाइल नंबर डालें");
-      return;
-    }
-    if (password.length < 6) {
-      setError("पासवर्ड कम से कम 6 अक्षरों का होना चाहिए");
-      return;
-    }
+    if (mobile.length !== 10) { setError("10 अंकों का मोबाइल नंबर डालें"); return; }
+    if (password.length < 6) { setError("पासवर्ड कम से कम 6 अक्षरों का होना चाहिए"); return; }
     setLoading(true);
     try {
       await signup(name, mobile, password, role);
@@ -77,7 +54,7 @@ export default function Signup() {
         {/* Role Selection */}
         <div className="mb-5">
           <Label className="text-base mb-3 block">आप कौन हैं? (Role चुनें)</Label>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {roles.map((r) => (
               <button
                 key={r.value}
@@ -102,14 +79,8 @@ export default function Signup() {
             <Label className="text-base">पूरा नाम</Label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="आपका नाम"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="pl-10 h-12 text-base"
-                required
-              />
+              <Input type="text" placeholder="आपका नाम" value={name}
+                onChange={(e) => setName(e.target.value)} className="pl-10 h-12 text-base" required />
             </div>
           </div>
 
@@ -117,15 +88,9 @@ export default function Signup() {
             <Label className="text-base">मोबाइल नंबर</Label>
             <div className="relative">
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                type="tel"
-                placeholder="10 अंकों का नंबर"
-                value={mobile}
-                onChange={(e) => setMobile(e.target.value)}
-                maxLength={10}
-                className="pl-10 h-12 text-base"
-                required
-              />
+              <Input type="tel" placeholder="10 अंकों का नंबर" value={mobile}
+                onChange={(e) => setMobile(e.target.value)} maxLength={10}
+                className="pl-10 h-12 text-base" required />
             </div>
           </div>
 
@@ -133,28 +98,18 @@ export default function Signup() {
             <Label className="text-base">पासवर्ड</Label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                type={showPass ? "text" : "password"}
-                placeholder="कम से कम 6 अक्षर"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="pl-10 pr-12 h-12 text-base"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPass(!showPass)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-              >
+              <Input type={showPass ? "text" : "password"} placeholder="कम से कम 6 अक्षर"
+                value={password} onChange={(e) => setPassword(e.target.value)}
+                className="pl-10 pr-12 h-12 text-base" required />
+              <button type="button" onClick={() => setShowPass(!showPass)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                 {showPass ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
           </div>
 
           {error && (
-            <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg border border-red-200">
-              {error}
-            </div>
+            <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg border border-red-200">{error}</div>
           )}
 
           <Button type="submit" className="w-full h-12 text-base font-semibold mt-2" disabled={loading}>
@@ -165,10 +120,8 @@ export default function Signup() {
         <div className="mt-6 text-center">
           <p className="text-muted-foreground text-sm">
             पहले से अकाउंट है?{" "}
-            <button
-              onClick={() => navigate("/login")}
-              className="text-primary font-semibold underline-offset-2 hover:underline"
-            >
+            <button onClick={() => navigate("/login")}
+              className="text-primary font-semibold underline-offset-2 hover:underline">
               लॉगिन करें
             </button>
           </p>

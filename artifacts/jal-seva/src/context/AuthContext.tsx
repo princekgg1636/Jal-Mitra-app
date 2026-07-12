@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-export type Role = "grahak" | "delivery_boy" | "admin";
+export type Role = "grahak" | "delivery_boy" | "admin" | "shop";
 
 export interface AuthUser {
   id: number;
@@ -12,6 +12,7 @@ export interface AuthUser {
 interface AuthContextType {
   user: AuthUser | null;
   loading: boolean;
+  isFullAccess: boolean;
   login: (mobile: string, password: string) => Promise<void>;
   signup: (name: string, mobile: string, password: string, role: Role) => Promise<void>;
   logout: () => Promise<void>;
@@ -26,39 +27,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     fetch("/api/auth/me", { credentials: "include" })
       .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (data?.id) setUser(data);
-      })
+      .then(data => { if (data?.id) setUser(data); })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
+  const isFullAccess = user?.role === "admin" || user?.role === "delivery_boy" || user?.role === "shop";
+
   async function login(mobile: string, password: string) {
     const res = await fetch("/api/auth/login", {
-      method: "POST",
-      credentials: "include",
+      method: "POST", credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ mobile, password }),
     });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || "Login failed");
-    }
+    if (!res.ok) { const err = await res.json(); throw new Error(err.error || "Login failed"); }
     const data = await res.json();
     setUser(data.user);
   }
 
   async function signup(name: string, mobile: string, password: string, role: Role) {
     const res = await fetch("/api/auth/signup", {
-      method: "POST",
-      credentials: "include",
+      method: "POST", credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, mobile, password, role }),
     });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || "Signup failed");
-    }
+    if (!res.ok) { const err = await res.json(); throw new Error(err.error || "Signup failed"); }
     const data = await res.json();
     setUser(data.user);
   }
@@ -69,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, loading, isFullAccess, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );
