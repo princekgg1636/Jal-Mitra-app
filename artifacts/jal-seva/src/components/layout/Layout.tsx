@@ -1,7 +1,8 @@
 import { ReactNode } from "react";
 import { MobileNav } from "./MobileNav";
-import { Link } from "wouter";
-import { Settings as SettingsIcon } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { Settings as SettingsIcon, LogOut } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 interface LayoutProps {
   children: ReactNode;
@@ -10,6 +11,14 @@ interface LayoutProps {
 }
 
 export function Layout({ children, title, showBack }: LayoutProps) {
+  const { logout } = useAuth();
+  const [, navigate] = useLocation();
+
+  async function handleLogout() {
+    await logout();
+    navigate("/login");
+  }
+
   return (
     <div className="min-h-[100dvh] flex flex-col bg-slate-50 dark:bg-zinc-950 pb-20">
       <header className="sticky top-0 z-40 bg-primary text-primary-foreground shadow-md h-14 flex items-center px-4">
@@ -27,11 +36,20 @@ export function Layout({ children, title, showBack }: LayoutProps) {
         )}
         <h1 className="text-xl font-semibold flex-1 truncate">{title || "अंशु जल"}</h1>
         {!showBack && (
-          <Link href="/settings">
-            <div className="w-10 h-10 flex items-center justify-center -mr-2 active:bg-primary/20 rounded-full">
-              <SettingsIcon className="w-6 h-6" />
-            </div>
-          </Link>
+          <div className="flex items-center gap-1">
+            <Link href="/settings">
+              <div className="w-10 h-10 flex items-center justify-center active:bg-primary/20 rounded-full">
+                <SettingsIcon className="w-5 h-5" />
+              </div>
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="w-10 h-10 flex items-center justify-center -mr-2 active:bg-primary/20 rounded-full"
+              title="Logout"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+          </div>
         )}
       </header>
 
