@@ -7,25 +7,27 @@ import bcrypt from "bcryptjs";
 const router = Router();
 
 function safeUser(u: typeof usersTable.$inferSelect) {
-  return { id: u.id, name: u.name, mobile: u.mobile, role: u.role, approved: u.approved };
+  return {
+    id: u.id, name: u.name, mobile: u.mobile,
+    role: u.role, approved: u.approved,
+    permissions: u.permissions ?? null,
+  };
 }
 
 router.post("/signup", async (req, res) => {
   try {
     const { name, mobile, password, role } = req.body;
     if (!name || !mobile || !password) {
-      res.status(400).json({ error: "Naam, mobile aur password zaroori hain" });
-      return;
+      res.status(400).json({ error: "Naam, mobile aur password zaroori hain" }); return;
     }
+    // co_admin can only be created by admin directly — not via public signup
     if (!["grahak", "delivery_boy", "admin", "shop"].includes(role)) {
-      res.status(400).json({ error: "Role galat hai" });
-      return;
+      res.status(400).json({ error: "Role galat hai" }); return;
     }
 
     const [existing] = await db.select().from(usersTable).where(eq(usersTable.mobile, mobile));
     if (existing) {
-      res.status(409).json({ error: "Yeh mobile number pehle se registered hai" });
-      return;
+      res.status(409).json({ error: "Yeh mobile number pehle se registered hai" }); return;
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -49,20 +51,17 @@ router.post("/login", async (req, res) => {
   try {
     const { mobile, password } = req.body;
     if (!mobile || !password) {
-      res.status(400).json({ error: "Mobile aur password daalo" });
-      return;
+      res.status(400).json({ error: "Mobile aur password daalo" }); return;
     }
 
     const [user] = await db.select().from(usersTable).where(eq(usersTable.mobile, mobile));
     if (!user) {
-      res.status(401).json({ error: "Mobile number registered nahi hai" });
-      return;
+      res.status(401).json({ error: "Mobile number registered nahi hai" }); return;
     }
 
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) {
-      res.status(401).json({ error: "Password galat hai" });
-      return;
+      res.status(401).json({ error: "Password galat hai" }); return;
     }
 
     (req.session as any).userId = user.id;

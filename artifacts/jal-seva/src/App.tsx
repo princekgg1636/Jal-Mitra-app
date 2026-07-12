@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { AuthProvider, useAuth, type Permission } from "@/context/AuthContext";
 
 import Dashboard from "@/pages/Dashboard";
 import GrahakDashboard from "@/pages/GrahakDashboard";
@@ -36,18 +36,17 @@ function LoadingScreen() {
   );
 }
 
-/** Home route — handles all role + approval combinations */
+/** Home route */
 function HomeRoute() {
   const { user, loading } = useAuth();
   if (loading) return <LoadingScreen />;
   if (!user) return <Redirect to="/login" />;
-  // Not yet approved → pending screen (admin is always approved)
   if (!user.approved) return <PendingApproval />;
   if (user.role === "grahak") return <GrahakDashboard />;
   return <Dashboard />;
 }
 
-/** Full-access only (admin/delivery_boy/shop + approved) */
+/** Full-access: admin, approved delivery_boy/shop, or co_admin with any permission */
 function FullRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, loading, isFullAccess } = useAuth();
   if (loading) return <LoadingScreen />;
@@ -57,7 +56,18 @@ function FullRoute({ component: Component }: { component: React.ComponentType })
   return <Component />;
 }
 
-/** Admin only */
+/** Permission-gated route for co_admin granular access */
+function PermRoute({ component: Component, permission }: { component: React.ComponentType; permission: Permission }) {
+  const { user, loading, can } = useAuth();
+  if (loading) return <LoadingScreen />;
+  if (!user) return <Redirect to="/login" />;
+  if (!user.approved) return <PendingApproval />;
+  // admin / delivery_boy / shop have implicit access, co_admin needs explicit permission
+  if (!can(permission)) return <Redirect to="/" />;
+  return <Component />;
+}
+
+/** Admin-only route */
 function AdminRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, loading } = useAuth();
   if (loading) return <LoadingScreen />;
@@ -66,7 +76,7 @@ function AdminRoute({ component: Component }: { component: React.ComponentType }
   return <Component />;
 }
 
-/** Any authenticated user (including non-approved — for settings/logout) */
+/** Any authenticated user */
 function AuthRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, loading } = useAuth();
   if (loading) return <LoadingScreen />;
@@ -80,14 +90,14 @@ function Router() {
       <Route path="/login"  component={Login} />
       <Route path="/signup" component={Signup} />
       <Route path="/"                   component={HomeRoute} />
-      <Route path="/customers"          component={() => <FullRoute component={CustomerList} />} />
-      <Route path="/customers/new"      component={() => <FullRoute component={CustomerForm} />} />
-      <Route path="/customers/:id/edit" component={() => <FullRoute component={CustomerForm} />} />
-      <Route path="/customers/:id"      component={() => <FullRoute component={CustomerDetail} />} />
-      <Route path="/delivery/new"       component={() => <FullRoute component={DeliveryEntry} />} />
-      <Route path="/payment/new"        component={() => <FullRoute component={PaymentEntry} />} />
-      <Route path="/party-orders"       component={() => <FullRoute component={PartyOrders} />} />
-      <Route path="/reports"            component={() => <FullRoute component={Reports} />} />
+      <Route path="/customers"          component={() => <PermRoute component={CustomerList}   permission="manage_customers" />} />
+      <Route path="/customers/new"      component={() => <PermRoute component={CustomerForm}   permission="manage_customers" />} />
+      <Route path="/customers/:id/edit" component={() => <PermRoute component={CustomerForm}   permission="manage_customers" />} />
+      <Route path="/customers/:id"      component={() => <PermRoute component={CustomerDetail} permission="manage_customers" />} />
+      <Route path="/delivery/new"       component={() => <PermRoute component={DeliveryEntry}  permission="manage_deliveries" />} />
+      <Route path="/payment/new"        component={() => <PermRoute component={PaymentEntry}   permission="manage_payments" />} />
+      <Route path="/party-orders"       component={() => <PermRoute component={PartyOrders}    permission="manage_party_orders" />} />
+      <Route path="/reports"            component={() => <PermRoute component={Reports}        permission="view_reports" />} />
       <Route path="/settings"           component={() => <AuthRoute component={Settings} />} />
       <Route path="/admin/users"        component={() => <AdminRoute component={AdminUsers} />} />
       <Route component={NotFound} />

@@ -1,6 +1,15 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-export type Role = "grahak" | "delivery_boy" | "admin" | "shop";
+export type Role = "grahak" | "delivery_boy" | "admin" | "shop" | "co_admin";
+
+export type Permission =
+  | "approve_users"
+  | "manage_customers"
+  | "manage_deliveries"
+  | "manage_payments"
+  | "manage_party_orders"
+  | "view_reports"
+  | "manage_settings";
 
 export interface AuthUser {
   id: number;
@@ -8,12 +17,14 @@ export interface AuthUser {
   mobile: string;
   role: Role;
   approved: boolean;
+  permissions: Permission[] | null;
 }
 
 interface AuthContextType {
   user: AuthUser | null;
   loading: boolean;
   isFullAccess: boolean;
+  can: (permission: Permission) => boolean;
   login: (mobile: string, password: string) => Promise<void>;
   signup: (name: string, mobile: string, password: string, role: Role) => Promise<void>;
   logout: () => Promise<void>;
@@ -33,9 +44,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false));
   }, []);
 
+  // Full access = admin, OR approved delivery_boy/shop, OR approved co_admin with any permissions
   const isFullAccess =
     user?.approved === true &&
-    (user.role === "admin" || user.role === "delivery_boy" || user.role === "shop");
+    (user.role === "admin" ||
+      user.role === "delivery_boy" ||
+      user.role === "shop" ||
+      (user.role === "co_admin" && (user.permissions?.length ?? 0) > 0));
+
+  // Check if user has a specific permission (admin always has everything)
+  function can(permission: Permission): boolean {
+    if (!user || !user.approved) return false;
+    if (user.role === "admin") return true;
+    if (user.role === "co_admin") return user.permissions?.includes(permission) ?? false;
+    // delivery_boy and shop have all permissions except approve_users and manage_settings
+    if (user.role === "delivery_boy" || user.role === "shop") {
+      return permission !== "approve_users" && permission !== "manage_settings";
+    }
+    return false;
+  }
 
   async function login(mobile: string, password: string) {
     const res = await fetch("/api/auth/login", {
@@ -65,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, isFullAccess, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, loading, isFullAccess, can, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );
