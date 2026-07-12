@@ -6,6 +6,10 @@ import bcrypt from "bcryptjs";
 
 const router = Router();
 
+function safeUser(u: typeof usersTable.$inferSelect) {
+  return { id: u.id, name: u.name, mobile: u.mobile, role: u.role, approved: u.approved };
+}
+
 router.post("/signup", async (req, res) => {
   try {
     const { name, mobile, password, role } = req.body;
@@ -13,7 +17,7 @@ router.post("/signup", async (req, res) => {
       res.status(400).json({ error: "Naam, mobile aur password zaroori hain" });
       return;
     }
-    if (!["grahak", "delivery_boy", "admin"].includes(role)) {
+    if (!["grahak", "delivery_boy", "admin", "shop"].includes(role)) {
       res.status(400).json({ error: "Role galat hai" });
       return;
     }
@@ -25,13 +29,16 @@ router.post("/signup", async (req, res) => {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const [user] = await db.insert(usersTable).values({ name, mobile, passwordHash, role }).returning();
+    // Admin is always auto-approved; others need admin approval
+    const approved = role === "admin";
+
+    const [user] = await db
+      .insert(usersTable)
+      .values({ name, mobile, passwordHash, role, approved })
+      .returning();
 
     (req.session as any).userId = user.id;
-
-    res.status(201).json({
-      user: { id: user.id, name: user.name, mobile: user.mobile, role: user.role },
-    });
+    res.status(201).json({ user: safeUser(user) });
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Server error" });
@@ -59,10 +66,7 @@ router.post("/login", async (req, res) => {
     }
 
     (req.session as any).userId = user.id;
-
-    res.json({
-      user: { id: user.id, name: user.name, mobile: user.mobile, role: user.role },
-    });
+    res.json({ user: safeUser(user) });
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Server error" });
@@ -72,18 +76,12 @@ router.post("/login", async (req, res) => {
 router.get("/me", async (req, res) => {
   try {
     const userId = (req.session as any)?.userId;
-    if (!userId) {
-      res.status(401).json({ error: "Login nahi hai" });
-      return;
-    }
+    if (!userId) { res.status(401).json({ error: "Login nahi hai" }); return; }
 
     const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
-    if (!user) {
-      res.status(401).json({ error: "User nahi mila" });
-      return;
-    }
+    if (!user) { res.status(401).json({ error: "User nahi mila" }); return; }
 
-    res.json({ id: user.id, name: user.name, mobile: user.mobile, role: user.role });
+    res.json(safeUser(user));
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Server error" });

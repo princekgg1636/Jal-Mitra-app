@@ -18,6 +18,8 @@ import Reports from "@/pages/Reports";
 import Settings from "@/pages/Settings";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
+import PendingApproval from "@/pages/PendingApproval";
+import AdminUsers from "@/pages/AdminUsers";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 1000 * 60 * 5, retry: 1 } },
@@ -34,25 +36,37 @@ function LoadingScreen() {
   );
 }
 
-/** Home route — shows GrahakDashboard for grahak, full Dashboard for others */
+/** Home route — handles all role + approval combinations */
 function HomeRoute() {
   const { user, loading } = useAuth();
   if (loading) return <LoadingScreen />;
   if (!user) return <Redirect to="/login" />;
+  // Not yet approved → pending screen (admin is always approved)
+  if (!user.approved) return <PendingApproval />;
   if (user.role === "grahak") return <GrahakDashboard />;
   return <Dashboard />;
 }
 
-/** Full-access only — redirects grahak to home */
+/** Full-access only (admin/delivery_boy/shop + approved) */
 function FullRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, loading, isFullAccess } = useAuth();
   if (loading) return <LoadingScreen />;
   if (!user) return <Redirect to="/login" />;
+  if (!user.approved) return <PendingApproval />;
   if (!isFullAccess) return <Redirect to="/" />;
   return <Component />;
 }
 
-/** Any authenticated user */
+/** Admin only */
+function AdminRoute({ component: Component }: { component: React.ComponentType }) {
+  const { user, loading } = useAuth();
+  if (loading) return <LoadingScreen />;
+  if (!user) return <Redirect to="/login" />;
+  if (user.role !== "admin") return <Redirect to="/" />;
+  return <Component />;
+}
+
+/** Any authenticated user (including non-approved — for settings/logout) */
 function AuthRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, loading } = useAuth();
   if (loading) return <LoadingScreen />;
@@ -65,16 +79,17 @@ function Router() {
     <Switch>
       <Route path="/login"  component={Login} />
       <Route path="/signup" component={Signup} />
-      <Route path="/"                    component={HomeRoute} />
-      <Route path="/customers"           component={() => <FullRoute component={CustomerList} />} />
-      <Route path="/customers/new"       component={() => <FullRoute component={CustomerForm} />} />
-      <Route path="/customers/:id/edit"  component={() => <FullRoute component={CustomerForm} />} />
-      <Route path="/customers/:id"       component={() => <FullRoute component={CustomerDetail} />} />
-      <Route path="/delivery/new"        component={() => <FullRoute component={DeliveryEntry} />} />
-      <Route path="/payment/new"         component={() => <FullRoute component={PaymentEntry} />} />
-      <Route path="/party-orders"        component={() => <FullRoute component={PartyOrders} />} />
-      <Route path="/reports"             component={() => <FullRoute component={Reports} />} />
-      <Route path="/settings"            component={() => <AuthRoute component={Settings} />} />
+      <Route path="/"                   component={HomeRoute} />
+      <Route path="/customers"          component={() => <FullRoute component={CustomerList} />} />
+      <Route path="/customers/new"      component={() => <FullRoute component={CustomerForm} />} />
+      <Route path="/customers/:id/edit" component={() => <FullRoute component={CustomerForm} />} />
+      <Route path="/customers/:id"      component={() => <FullRoute component={CustomerDetail} />} />
+      <Route path="/delivery/new"       component={() => <FullRoute component={DeliveryEntry} />} />
+      <Route path="/payment/new"        component={() => <FullRoute component={PaymentEntry} />} />
+      <Route path="/party-orders"       component={() => <FullRoute component={PartyOrders} />} />
+      <Route path="/reports"            component={() => <FullRoute component={Reports} />} />
+      <Route path="/settings"           component={() => <AuthRoute component={Settings} />} />
+      <Route path="/admin/users"        component={() => <AdminRoute component={AdminUsers} />} />
       <Route component={NotFound} />
     </Switch>
   );

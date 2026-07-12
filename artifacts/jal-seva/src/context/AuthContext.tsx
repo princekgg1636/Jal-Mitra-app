@@ -7,6 +7,7 @@ export interface AuthUser {
   name: string;
   mobile: string;
   role: Role;
+  approved: boolean;
 }
 
 interface AuthContextType {
@@ -32,7 +33,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false));
   }, []);
 
-  const isFullAccess = user?.role === "admin" || user?.role === "delivery_boy" || user?.role === "shop";
+  const isFullAccess =
+    user?.approved === true &&
+    (user.role === "admin" || user.role === "delivery_boy" || user.role === "shop");
 
   async function login(mobile: string, password: string) {
     const res = await fetch("/api/auth/login", {
