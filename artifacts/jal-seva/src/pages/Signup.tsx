@@ -4,13 +4,12 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, Phone, Lock, User, Home, Bike, ShieldCheck, Store } from "lucide-react";
+import { Eye, EyeOff, Phone, Lock, User, Home, Bike, Store } from "lucide-react";
 
 const roles: { value: Role; label: string; sublabel: string; icon: React.ReactNode; color: string }[] = [
-  { value: "grahak",      label: "ग्राहक",       sublabel: "Customer",     icon: <Home className="w-6 h-6" />,        color: "border-blue-400 bg-blue-50 text-blue-700" },
-  { value: "delivery_boy",label: "डिलीवरी बॉय", sublabel: "Delivery Boy", icon: <Bike className="w-6 h-6" />,        color: "border-green-400 bg-green-50 text-green-700" },
-  { value: "shop",        label: "दुकान",         sublabel: "Shop",         icon: <Store className="w-6 h-6" />,       color: "border-orange-400 bg-orange-50 text-orange-700" },
-  { value: "admin",       label: "एडमिन",         sublabel: "Admin",        icon: <ShieldCheck className="w-6 h-6" />, color: "border-purple-400 bg-purple-50 text-purple-700" },
+  { value: "grahak",       label: "ग्राहक",       sublabel: "Customer",     icon: <Home className="w-6 h-6" />,  color: "border-blue-400 bg-blue-50 text-blue-700" },
+  { value: "delivery_boy", label: "डिलीवरी बॉय", sublabel: "Delivery Boy", icon: <Bike className="w-6 h-6" />,  color: "border-green-400 bg-green-50 text-green-700" },
+  { value: "shop",         label: "दुकान",         sublabel: "Shop",         icon: <Store className="w-6 h-6" />, color: "border-orange-400 bg-orange-50 text-orange-700" },
 ];
 
 export default function Signup() {
@@ -51,10 +50,10 @@ export default function Signup() {
       <div className="flex-1 p-6 -mt-6 bg-slate-50 rounded-t-3xl overflow-y-auto pb-10">
         <h2 className="text-xl font-bold mb-5 text-slate-800">साइनअप करें</h2>
 
-        {/* Role Selection */}
+        {/* Role Selection — no admin option */}
         <div className="mb-5">
           <Label className="text-base mb-3 block">आप कौन हैं? (Role चुनें)</Label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             {roles.map((r) => (
               <button
                 key={r.value}
@@ -67,8 +66,8 @@ export default function Signup() {
                 }`}
               >
                 {r.icon}
-                <span className="font-semibold text-sm leading-tight">{r.label}</span>
-                <span className="text-xs opacity-70">{r.sublabel}</span>
+                <span className="font-semibold text-xs leading-tight text-center">{r.label}</span>
+                <span className="text-[10px] opacity-70">{r.sublabel}</span>
               </button>
             ))}
           </div>
