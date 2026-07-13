@@ -10,6 +10,8 @@ import {
   UserPlus, Eye, EyeOff, Shield, ChevronDown, ChevronUp
 } from "lucide-react";
 
+const API_URL = import.meta.env.VITE_API_URL || "";
+
 interface ManagedUser {
   id: number; name: string; mobile: string;
   role: string; approved: boolean;
@@ -60,7 +62,7 @@ export default function AdminUsers() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await fetch("/api/admin/users", { credentials: "include" });
+      const r = await fetch(`${API_URL}/api/admin/users`, { credentials: "include" });
       setUsers(await r.json());
     } finally { setLoading(false); }
   }, []);
@@ -72,7 +74,7 @@ export default function AdminUsers() {
     const perms = u.role === "co_admin"
       ? (permEditing[u.id] ?? u.permissions ?? [])
       : undefined;
-    const r = await fetch(`/api/admin/users/${u.id}/approve`, {
+    const r = await fetch(`${API_URL}/api/admin/users/${u.id}/approve`, {
       method: "PATCH", credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ permissions: perms }),
@@ -83,7 +85,7 @@ export default function AdminUsers() {
   // ── Save permissions for already-approved co_admin ───────────
   async function savePermissions(u: ManagedUser) {
     const perms = permEditing[u.id] ?? u.permissions ?? [];
-    const r = await fetch(`/api/admin/users/${u.id}/permissions`, {
+    const r = await fetch(`${API_URL}/api/admin/users/${u.id}/permissions`, {
       method: "PATCH", credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ permissions: perms }),
@@ -92,7 +94,7 @@ export default function AdminUsers() {
   }
 
   async function reject(u: ManagedUser) {
-    const r = await fetch(`/api/admin/users/${u.id}/reject`, {
+    const r = await fetch(`${API_URL}/api/admin/users/${u.id}/reject`, {
       method: "PATCH", credentials: "include",
     });
     if (r.ok) { toast({ title: `❌ ${u.name} का access हटा दिया` }); load(); }
@@ -100,7 +102,7 @@ export default function AdminUsers() {
 
   async function deleteUser(u: ManagedUser) {
     if (!confirm(`"${u.name}" को permanently delete करें?`)) return;
-    await fetch(`/api/admin/users/${u.id}`, { method: "DELETE", credentials: "include" });
+    await fetch(`${API_URL}/api/admin/users/${u.id}`, { method: "DELETE", credentials: "include" });
     toast({ title: `${u.name} delete हो गया` });
     load();
   }
@@ -112,7 +114,7 @@ export default function AdminUsers() {
     if (createPassword.length < 6) { toast({ title: "Password कम से कम 6 अक्षरों का होना चाहिए", variant: "destructive" }); return; }
     setCreating(true);
     try {
-      const r = await fetch("/api/admin/create-user", {
+      const r = await fetch(`${API_URL}/api/admin/create-user`, {
         method: "POST", credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: createName, mobile: createMobile, password: createPassword, role: createRole }),
@@ -365,4 +367,4 @@ export default function AdminUsers() {
       </div>
     </Layout>
   );
-}
+        }
