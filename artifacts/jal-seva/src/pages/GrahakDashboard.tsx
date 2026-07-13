@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Droplet, IndianRupee, CalendarDays, CheckCircle2, Clock, SendHorizonal } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+const API_URL = import.meta.env.VITE_API_URL || "";
 interface GrahakData {
   linked: boolean;
   message?: string;
@@ -29,7 +30,7 @@ export default function GrahakDashboard() {
   const [showRequestForm, setShowRequestForm] = useState(false);
 
   useEffect(() => {
-    fetch("/api/grahak/me", { credentials: "include" })
+    fetch(`${API_URL}/api/grahak/me`, { credentials: "include" })
       .then(r => r.json())
       .then(setData)
       .catch(() => {})
@@ -39,7 +40,7 @@ export default function GrahakDashboard() {
   async function submitRequest() {
     setRequesting(true);
     try {
-      const res = await fetch("/api/jar-requests", {
+      const res = await fetch(`${API_URL}/api/jar-requests`, {
         method: "POST", credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jarCount }),
