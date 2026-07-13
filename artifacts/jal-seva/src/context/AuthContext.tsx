@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
+const API_URL = import.meta.env.VITE_API_URL || "";
+
 export type Role = "grahak" | "delivery_boy" | "admin" | "shop" | "co_admin";
 
 export type Permission =
@@ -37,7 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/auth/me", { credentials: "include" })
+    fetch(`${API_URL}/api/auth/me`, { credentials: "include" })
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data?.id) setUser(data); })
       .catch(() => {})
@@ -65,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function login(mobile: string, password: string) {
-    const res = await fetch("/api/auth/login", {
+    const res = await fetch(`${API_URL}/api/auth/login`, {
       method: "POST", credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ mobile, password }),
@@ -76,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signup(name: string, mobile: string, password: string, role: Role) {
-    const res = await fetch("/api/auth/signup", {
+    const res = await fetch(`${API_URL}/api/auth/signup`, {
       method: "POST", credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, mobile, password, role }),
@@ -87,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function logout() {
-    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    await fetch(`${API_URL}/api/auth/logout`, { method: "POST", credentials: "include" });
     setUser(null);
   }
 
