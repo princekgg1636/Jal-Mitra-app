@@ -81,8 +81,8 @@ export default function CustomerForm() {
           toast({ title: "ग्राहक अपडेट हो गया (Customer updated)" });
           setLocation(`/customers/${customerId}`);
         },
-        onError: () => {
-          toast({ title: "त्रुटि (Error)", variant: "destructive" });
+        onError: (err: any) => {
+          toast({ title: "त्रुटि (Error)", description: String(err?.message || err), variant: "destructive" });
         }
       });
     } else {
@@ -92,8 +92,8 @@ export default function CustomerForm() {
           toast({ title: "नया ग्राहक जुड़ गया (Customer added)" });
           setLocation(`/customers/${newCustomer.id}`);
         },
-        onError: () => {
-          toast({ title: "त्रुटि (Error)", variant: "destructive" });
+        onError: (err: any) => {
+          toast({ title: "त्रुटि (Error)", description: String(err?.message || err), variant: "destructive" });
         }
       });
     }
