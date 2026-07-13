@@ -49,8 +49,9 @@ app.use(
   httpOnly: true,
   secure: true,
   sameSite: "none",
+  domain: ".rozgardesk.com",
   maxAge: 30 * 24 * 60 * 60 * 1000,
- },
+},
 }),
 );
 
