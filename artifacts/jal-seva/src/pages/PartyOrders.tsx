@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { PartyPopper, Plus, Phone, MapPin, Droplet, IndianRupee, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 
+const API_URL = import.meta.env.VITE_API_URL || "";
 interface PartyOrder {
   id: number; eventName: string; contactName: string;
   address: string | null; phone: string | null;
@@ -45,7 +46,7 @@ export default function PartyOrders() {
 
   async function loadOrders() {
     setLoading(true);
-    const r = await fetch("/api/party-orders", { credentials: "include" });
+    const r = await fetch(`${API_URL}/api/party-orders`, { credentials: "include" });
     setOrders(await r.json());
     setLoading(false);
   }
@@ -55,7 +56,7 @@ export default function PartyOrders() {
       toast({ title: "सभी ज़रूरी जानकारी भरें", variant: "destructive" }); return;
     }
     setSaving(true);
-    const res = await fetch("/api/party-orders", {
+    const res = await fetch(`${API_URL}/api/party-orders`, {
       method: "POST", credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
@@ -73,7 +74,7 @@ export default function PartyOrders() {
   }
 
   async function updateStatus(id: number, status: string) {
-    await fetch(`/api/party-orders/${id}`, {
+    await fetch(`${API_URL}/api/party-orders/${id}`, {
       method: "PATCH", credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
@@ -83,7 +84,7 @@ export default function PartyOrders() {
 
   async function deleteOrder(id: number) {
     if (!confirm("यह order delete करें?")) return;
-    await fetch(`/api/party-orders/${id}`, { method: "DELETE", credentials: "include" });
+    await fetch(`${API_URL}/api/party-orders/${id}`, { method: "DELETE", credentials: "include" });
     toast({ title: "Order delete हो गया" });
     loadOrders();
   }
